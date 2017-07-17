@@ -7,6 +7,11 @@ const rp = require('request-promise');
 
 const BASE_URL = 'http://wait-smart.herokuapp.com/api/v1';
 
+/**
+ * Finds the Ride Wait time given the rides name
+ * @param rideName
+ * @param callback
+ */
 export function getRideWaitTime(rideName, callback) {
     getIDforName(rideName, (data) => {
         //Data is the ID being returned from the ID -> name callback
@@ -23,6 +28,11 @@ export function getRideWaitTime(rideName, callback) {
     });
 }
 
+/**
+ * Finds the Average Wait time for a park given the parks name
+ * @param park
+ * @param callback
+ */
 export function getAverageParkWaitTime (park, callback) {
     let options = {
         method: 'GET',

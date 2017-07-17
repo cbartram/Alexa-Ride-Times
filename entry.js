@@ -5,8 +5,7 @@ api.getIDforName("Despicable Me Minion Mayhem", (data) => {
 
 });
 
-api.getRideWaitTime("Despicabl", (id, name, wait) => {
-
+api.getRideWaitTime("Spider-", (id, name, wait) => {
 });
 
 api.getAverageParkWaitTime("Universal", (data, wait) => {
