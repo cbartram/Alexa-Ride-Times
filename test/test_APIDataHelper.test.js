@@ -1,5 +1,4 @@
 'use strict';
-
 let chai = require('chai');
 let expect = chai.expect;
 chai.config.includeStack = true;
