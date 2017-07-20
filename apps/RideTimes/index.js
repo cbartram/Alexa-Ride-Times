@@ -101,7 +101,16 @@ app.intent("RideWaitTimes", rideSchema, (req, res) => {
         } else {
             //We have the information
            return API.getRideWaitTime(rideName).then(function(data) {
-               res.say("The wait time for " + data.body[0].name + " s currently " + data.body[0].wait_time + " minutes");
+               if(data.body.length === 0) {
+                 res.say(`I couldn\'t find a ride with the name ${rideName}`)
+               } else {
+                   //The ride is down for maintenance
+                   if(data.body[0].wait_time < 0) {
+                       res.say(`${data.body[0].name} is currently down for maintenance`)
+                   } else {
+                       res.say("The wait time for " + data.body[0].name + " s currently " + data.body[0].wait_time + " minutes");
+                   }
+               }
            });
 
         }
@@ -122,7 +131,11 @@ app.intent('ParkWaitTimes', parkSchema, (req, res) => {
     } else {
         //We've got the information we need
         return API.getAverageParkWaitTime(parkName).then(function(data) {
-            res.say("The average wait time for " + data.body.park + " theme park is currently " + data.body.wait + " minutes");
+            if(data.body.length === 0) {
+                res.say(`I couldn\'t find the park with the name ${parkName}`)
+            } else {
+                res.say("The average wait time for " + data.body.park + " theme park is currently " + data.body.wait + " minutes");
+            }
         });
     }
 });
