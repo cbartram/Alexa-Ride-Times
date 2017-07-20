@@ -14,11 +14,11 @@ let rideSchema = {
     },
 
     "utterances":  [
-        "Rides Times whats the wait time for {rideName}",
-        "Ride Times what are the lines like for {rideName}",
-        "Ride Times what are the lines looking like for {rideName}",
-        "Ride Times how are the lines for {rideName}",
-        "Ride Times what are the ride wait times for {rideName}",
+        "whats the wait time for {rideName}",
+        "what are the lines like for {rideName}",
+        "what are the lines looking like for {rideName}",
+        "how are the lines for {rideName}",
+        "what are the ride wait times for {rideName}",
     ]
 };
 
@@ -28,14 +28,62 @@ let parkSchema = {
     },
 
     "utterances": [
-        "Ride Times how are the wait times at {parkName}",
-        "Ride Times what are the lines like at {parkName}",
-        "Ride Times what are the ride wait times for {parkName}",
-        "Ride Times how are the lines at {parkName}",
-        "Ride Times whats the average wait time in {parkName}",
-        "Ride Times what are the {parkName} wait times like"
+        "how are the wait times at {parkName}",
+        "what are the lines like at {parkName}",
+        "what are the ride wait times for {parkName}",
+        "how are the lines at {parkName}",
+        "whats the average wait time in {parkName}",
+        "what are the {parkName} wait times like"
     ]
 };
+
+let helpSchema = {
+    "slots": {},
+    "utterances": [
+        "help",
+        "how do I use this",
+        "I need help",
+    ]
+};
+
+let cancelSchema = {
+    "slots": {},
+    "utterances": [
+        "cancel",
+        "pause",
+    ]
+};
+
+let stopSchema = {
+    "slots": {},
+    "utterances": [
+        "stop",
+        "finish",
+        "end"
+    ]
+};
+
+app.intent("AMAZON.HelpIntent", helpSchema, (req, res) => {
+    //Alexa's Help Prompt
+    let prompt = 'Just ask for the ride or park you want information about. You can ask me things like what are the wait times at Universal, or Whats the wait time like for Harry Potter';
+
+    res.say(prompt).shouldEndSession(false);
+});
+
+app.intent("AMAZON.CancelIntent", cancelSchema, (req, res) => {
+    //Alexa's Cancel Prompt
+    let prompt = 'No problem Request cancelled!';
+
+    res.say(prompt).shouldEndSession(false);
+});
+
+app.intent("AMAZON.StopIntent", stopSchema, (req, res) => {
+    //Alexa's stop Prompt
+    let prompt = 'Thank you for using Ride Times!';
+
+    res.say(prompt).shouldEndSession(true);
+});
+
 
 app.intent("RideWaitTimes", rideSchema, (req, res) => {
         //Get the slot
