@@ -1,123 +1,153 @@
-/* eslint-disable  func-names */
-/* eslint quote-props: ["error", "consistent"]*/
-/**
- * This sample demonstrates a sample skill built with Amazon Alexa Skills nodejs
- * skill development kit.
- * This sample supports multiple languages (en-US, en-GB, de-GB).
- * The Intent Schema, Custom Slot and Sample Utterances for this skill, as well
- * as testing instructions are located at https://github.com/alexa/skill-sample-nodejs-howto
- **/
-
 'use strict';
 
-const Alexa = require('alexa-sdk');
-const recipes = require('./recipes');
-const API = require('./APIDataHelper');
+module.change_code = 1;
 
-const APP_ID = 'amzn1.ask.skill.5fe2b8e1-59d5-422f-9298-b01182625a0f';
+let _ = require('lodash');
+let Alexa = require('alexa-app');
 
-const languageStrings = {
-    'en': {
-        translation: {
-            RECIPES: recipes.RECIPE_EN_US,
-            SKILL_NAME: 'Ride Times',
-            WELCOME_MESSAGE: "Welcome to %s. You can ask a question like, what are the wait times like for Universal? or How are the lines for The Incredible Hulk? ... Now, how can I help?",
-            WELCOME_REPROMT: 'For instructions on what you can say, please say help me.',
-            DISPLAY_CARD_TITLE: '%s  - Recipe for %s.',
-            HELP_MESSAGE: "You can ask questions such as, what are the ride wait times for Volcano Bay, or, you can say exit...Now, what can I help you with?",
-            HELP_REPROMT: "You can say things like, whats the wait time for Harry Potter Escape from Gringotts, or you can say exit...Now, what can I help you with?",
-            STOP_MESSAGE: 'Goodbye!',
-            RECIPE_REPEAT_MESSAGE: 'Try saying repeat.',
-            RECIPE_NOT_FOUND_MESSAGE: "I\'m sorry, I currently do not know ",
-            RECIPE_NOT_FOUND_WITH_ITEM_NAME: 'The ride %s. ',
-            RECIPE_NOT_FOUND_WITHOUT_ITEM_NAME: 'that ride. ',
-            RECIPE_NOT_FOUND_REPROMPT: 'What else can I help with?',
-        },
+let app = new Alexa.app('ride-times');
+let API = require('./APIDataHelper');
+
+let rideSchema = {
+    "slots": {
+        "rideName": "List_of_Rides",
     },
-    'en-US': {
-        translation: {
-            RECIPES: recipes.RECIPE_EN_US,
-            SKILL_NAME: 'Ride Times',
-        },
-    },
-    'en-GB': {
-        translation: {
-            RECIPES: recipes.RECIPE_EN_GB,
-            SKILL_NAME: 'Ride Times',
-        },
-    },
+
+    "utterances":  [
+        "whats the wait time for {rideName}",
+        "what are the lines like for {rideName}",
+        "what are the lines looking like for {rideName}",
+        "how are the lines for {rideName}",
+        "what are the ride wait times for {rideName}",
+    ]
 };
 
-const handlers = {
-    'LaunchRequest': function () {
-        this.attributes.speechOutput = this.t('WELCOME_MESSAGE', this.t('SKILL_NAME'));
-        // If the user either does not reply to the welcome message or says something that is not
-        // understood, they will be prompted again with this text.
-        this.attributes.repromptSpeech = this.t('WELCOME_REPROMT');
-        this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+let parkSchema = {
+    "slots": {
+        "parkName": "List_of_Parks"
     },
-    'RecipeIntent': function () {
-        const parkSlot = this.event.request.intent.slots.parkName;
-        const rideSlot = this.event.request.intent.slots.rideName;
 
-        let rideName;
-        if (rideSlot.value && parkSlot.value) {
-            rideName = rideSlot.value.toLowerCase();
-        }
+    "utterances": [
+        "how are the wait times at {parkName}",
+        "what are the lines like at {parkName}",
+        "what are the ride wait times for {parkName}",
+        "how are the lines at {parkName}",
+        "whats the average wait time in {parkName}",
+        "what are the {parkName} wait times like"
+    ]
+};
 
-        const cardTitle = this.t('DISPLAY_CARD_TITLE', this.t('SKILL_NAME'), rideName);
-        const myRecipes = this.t('RECIPES');
-        const recipe = myRecipes[rideName];
+let helpSchema = {
+    "slots": {},
+    "utterances": [
+        "help",
+        "how do I use this",
+        "I need help",
+    ]
+};
 
-        if (recipe) {
-            this.attributes.speechOutput = recipe;
-            this.attributes.repromptSpeech = this.t('RECIPE_REPEAT_MESSAGE');
-            this.emit(':askWithCard', recipe, this.attributes.repromptSpeech, cardTitle, recipe);
+let cancelSchema = {
+    "slots": {},
+    "utterances": [
+        "cancel",
+        "pause",
+    ]
+};
+
+let stopSchema = {
+    "slots": {},
+    "utterances": [
+        "stop",
+        "finish",
+        "end"
+    ]
+};
+
+app.intent("AMAZON.HelpIntent", helpSchema, (req, res) => {
+    //Alexa's Help Prompt
+    let prompt = 'Just ask for the ride or park you want information about. You can ask me things like what are the wait times at Universal, or Whats the wait time like for Harry Potter';
+
+    res.say(prompt).shouldEndSession(false);
+});
+
+app.intent("AMAZON.CancelIntent", cancelSchema, (req, res) => {
+    //Alexa's Cancel Prompt
+    let prompt = 'No problem Request cancelled!';
+
+    res.say(prompt).shouldEndSession(true);
+});
+
+app.intent("AMAZON.StopIntent", stopSchema, (req, res) => {
+    //Alexa's stop Prompt
+    let prompt = 'Thank you for using Ride Times!';
+
+    res.say(prompt).shouldEndSession(true);
+});
+
+
+app.intent("RideWaitTimes", rideSchema, (req, res) => {
+        //Get the slot
+        let rideName = req.slot('rideName');
+
+        const rePrompt = "You can say the Incredible Hulk or Men in Black to get the rides current wait time.";
+
+        if (_.isEmpty(rideName)) {
+
+            let prompt = "I didnt catch the rides name... Try again!";
+
+            res.say(prompt).reprompt(rePrompt).shouldEndSession(false);
+
+            return true;
         } else {
-            let speechOutput = this.t('RECIPE_NOT_FOUND_MESSAGE');
-            const repromptSpeech = this.t('RECIPE_NOT_FOUND_REPROMPT');
-            if (rideName) {
-                speechOutput += this.t('RECIPE_NOT_FOUND_WITH_ITEM_NAME', rideName);
-            } else {
-                speechOutput += this.t('RECIPE_NOT_FOUND_WITHOUT_ITEM_NAME');
-            }
-            speechOutput += repromptSpeech;
+            //We have the information
+           return API.getRideWaitTime(rideName).then(function(data) {
+               if(data.body.length === 0) {
+                 res.say(`I couldn\'t find a ride with the name ${rideName} try asking for a unique word or phrase in the rides name`).shouldEndSession(false);
+               } else {
+                   //The ride is down for maintenance
+                   if(data.body[0].wait_time < 0) {
+                       res.say(`${data.body[0].name} is currently down for maintenance`).shouldEndSession(false);
+                   } else {
+                       res.say("The wait time for " + data.body[0].name + " s currently " + data.body[0].wait_time + " minutes").shouldEndSession(false);
+                   }
+               }
+           });
 
-            this.attributes.speechOutput = speechOutput;
-            this.attributes.repromptSpeech = repromptSpeech;
-
-            this.emit(':ask', speechOutput, repromptSpeech);
         }
-    },
-    'AMAZON.HelpIntent': function () {
-        this.attributes.speechOutput = this.t('HELP_MESSAGE');
-        this.attributes.repromptSpeech = this.t('HELP_REPROMT');
-        this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
-    },
-    'AMAZON.RepeatIntent': function () {
-        this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
-    },
-    'AMAZON.StopIntent': function () {
-        this.emit('SessionEndedRequest');
-    },
-    'AMAZON.CancelIntent': function () {
-        this.emit('SessionEndedRequest');
-    },
-    'SessionEndedRequest': function () {
-        this.emit(':tell', this.t('STOP_MESSAGE'));
-    },
-    'Unhandled': function () {
-        this.attributes.speechOutput = this.t('HELP_MESSAGE');
-        this.attributes.repromptSpeech = this.t('HELP_REPROMPT');
-        this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
-    },
-};
+    }
+);
 
-exports.handler = function (event, context) {
-    const alexa = Alexa.handler(event, context);
-    alexa.APP_ID = APP_ID;
-    // To enable string internationalization (i18n) features, set a resources object.
-    alexa.resources = languageStrings;
-    alexa.registerHandlers(handlers);
-    alexa.execute();
-};
+app.intent('ParkWaitTimes', parkSchema, (req, res) => {
+    let parkName = req.slot('parkName');
+    const rePrompt = "You can say Universal or Islands of Adventure to get the average park wait time.";
+
+    //Could not parse the intent
+    if (_.isEmpty(parkName)) {
+        let prompt = "I didnt catch the parks name...Try again";
+
+        res.say(prompt).reprompt(rePrompt).shouldEndSession(false);
+
+        return true;
+    } else {
+        //We've got the information we need
+        return API.getAverageParkWaitTime(parkName).then(function(data) {
+            if(data.body.length === 0) {
+                res.say(`I couldn\'t find the park with the name ${parkName} try asking for a unique word or phrase in the park name`).shouldEndSession(false)
+            } else {
+                res.say("The average wait time for " + data.body.park + " theme park is currently " + data.body.wait + " minutes").shouldEndSession(false);
+            }
+        });
+    }
+});
+
+app.launch(function(req, res) {
+
+    //Alexa's first prompt
+    let prompt = 'Welcome to Ride Times, you can ask me things like what are the wait times at Universal, or Whats the line like for The Incredible Hulk....How can I help you today';
+
+    res.say(prompt).reprompt(prompt).shouldEndSession(false);
+
+});
+
+
+module.exports = app;

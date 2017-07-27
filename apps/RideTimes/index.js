@@ -74,12 +74,16 @@ app.intent("AMAZON.CancelIntent", cancelSchema, (req, res) => {
     //Alexa's Cancel Prompt
     let prompt = 'No problem Request cancelled!';
 
-    res.say(prompt).shouldEndSession(false);
+    console.log('App Closed');
+
+    res.say(prompt).shouldEndSession(true);
 });
 
 app.intent("AMAZON.StopIntent", stopSchema, (req, res) => {
     //Alexa's stop Prompt
     let prompt = 'Thank you for using Ride Times!';
+
+    console.log('App Closed');
 
     res.say(prompt).shouldEndSession(true);
 });
@@ -93,7 +97,8 @@ app.intent("RideWaitTimes", rideSchema, (req, res) => {
 
         if (_.isEmpty(rideName)) {
 
-            let prompt = "I didnt catch the rides name";
+            let prompt = "I didnt catch the rides name... Try again!";
+            console.log('Could Not parse rideName (slurred speech) ' + rideName);
 
             res.say(prompt).reprompt(rePrompt).shouldEndSession(false);
 
@@ -102,13 +107,17 @@ app.intent("RideWaitTimes", rideSchema, (req, res) => {
             //We have the information
            return API.getRideWaitTime(rideName).then(function(data) {
                if(data.body.length === 0) {
-                 res.say(`I couldn\'t find a ride with the name ${rideName}`)
+
+                   console.log('Ride Name Parsed But could not lookup:  ' + rideName);
+
+                   res.say(`I couldn\'t find a ride with the name ${rideName} try asking for a unique word or phrase in the rides name`).shouldEndSession(false);
                } else {
                    //The ride is down for maintenance
                    if(data.body[0].wait_time < 0) {
-                       res.say(`${data.body[0].name} is currently down for maintenance`)
+                       res.say(`${data.body[0].name} is currently down for maintenance`).shouldEndSession(false);
                    } else {
-                       res.say("The wait time for " + data.body[0].name + " s currently " + data.body[0].wait_time + " minutes");
+                       console.log("Ride name successfully parsed and fetched");
+                       res.say("The wait time for " + data.body[0].name + " s currently " + data.body[0].wait_time + " minutes").shouldEndSession(false);
                    }
                }
            });
@@ -123,7 +132,9 @@ app.intent('ParkWaitTimes', parkSchema, (req, res) => {
 
     //Could not parse the intent
     if (_.isEmpty(parkName)) {
-        let prompt = "I didnt catch the parks name";
+        let prompt = "I didnt catch the parks name...Try again";
+
+        console.log("Could not parse the parks name (slurred speech): " + parkName);
 
         res.say(prompt).reprompt(rePrompt).shouldEndSession(false);
 
@@ -132,13 +143,23 @@ app.intent('ParkWaitTimes', parkSchema, (req, res) => {
         //We've got the information we need
         return API.getAverageParkWaitTime(parkName).then(function(data) {
             if(data.body.length === 0) {
-                res.say(`I couldn\'t find the park with the name ${parkName}`)
+
+                console.log("Parsed park name but could not fetch data: " + parkName);
+
+                res.say(`I couldn\'t find the park with the name ${parkName} try asking for a unique word or phrase in the park name`).shouldEndSession(false)
             } else {
-                res.say("The average wait time for " + data.body.park + " theme park is currently " + data.body.wait + " minutes");
+                res.say("The average wait time for " + data.body.park + " theme park is currently " + data.body.wait + " minutes").shouldEndSession(false);
             }
         });
     }
 });
+
+app.error = function(exception, request, response) {
+    console.log(request);
+    console.log(response);
+    console.log(exception);
+    response.say("Something went Wrong  tryind to find you the wait times try again!").shouldEndSession(false);
+};
 
 app.launch(function(req, res) {
 
