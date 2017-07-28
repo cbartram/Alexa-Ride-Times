@@ -37,6 +37,17 @@ let parkSchema = {
     ]
 };
 
+let rideTypeSchema = {
+    "slots": {
+        "rideName": "List_of_Parks"
+    },
+
+    "utterances": [
+        "what kind of ride is {rideName}",
+        "what type of ride is {rideName}",
+    ]
+};
+
 let helpSchema = {
     "slots": {},
     "utterances": [
@@ -63,6 +74,9 @@ let stopSchema = {
     ]
 };
 
+/**
+ * Handles Alexa Help Intent
+ */
 app.intent("AMAZON.HelpIntent", helpSchema, (req, res) => {
     //Alexa's Help Prompt
     let prompt = 'Just ask for the ride or park you want information about. You can ask me things like what are the wait times at Universal, or Whats the wait time like for Harry Potter';
@@ -70,6 +84,10 @@ app.intent("AMAZON.HelpIntent", helpSchema, (req, res) => {
     res.say(prompt).shouldEndSession(false);
 });
 
+
+/**
+ * Handles Alexa Cancel Intent
+ */
 app.intent("AMAZON.CancelIntent", cancelSchema, (req, res) => {
     //Alexa's Cancel Prompt
     let prompt = 'No problem Request cancelled!';
@@ -79,6 +97,9 @@ app.intent("AMAZON.CancelIntent", cancelSchema, (req, res) => {
     res.say(prompt).shouldEndSession(true);
 });
 
+/**
+ * Handles Alexa Stop Intent
+ */
 app.intent("AMAZON.StopIntent", stopSchema, (req, res) => {
     //Alexa's stop Prompt
     let prompt = 'Thank you for using Ride Times!';
@@ -89,6 +110,40 @@ app.intent("AMAZON.StopIntent", stopSchema, (req, res) => {
 });
 
 
+/**
+ * Handles Alexa Ride Type Intent
+ */
+app.intent("RideType", rideTypeSchema, (req, res) => {
+
+    let prompt = "";
+    let rePrompt = "You can ask things like what kind of ride is Reign of Kong";
+    const rideName = req.slot('rideName');
+
+    if(_.isEmpty(rideName)) {
+        prompt = "I didnt catch the rides name...Try again!";
+
+        console.log("Could not parse ride name for RideType intent: " + rideName);
+
+        res.say(prompt).reprompt(rePrompt).shouldEndSession(false);
+    } else {
+        //Parsed ride name successfully
+        return API.getRideWaitTime(rideName).then(function(data) {
+           if(data.body.length === 0) {
+               console.log('Ride Name Parsed But could not lookup for RideType intent:  ' + rideName);
+               console.log(data);
+
+               res.say(`I couldn\'t find a ride with the name ${rideName} try asking for a unique word or phrase in the rides name`).shouldEndSession(false);
+           }  else {
+               res.say(`${rideName}'s is a ${data.body[0].ride_type} ride`).shouldEndSession(false);
+           }
+        });
+    }
+
+});
+
+/**
+ * Handles finding the Ride Wait Times
+ */
 app.intent("RideWaitTimes", rideSchema, (req, res) => {
         //Get the slot
         let rideName = req.slot('rideName');
@@ -126,6 +181,10 @@ app.intent("RideWaitTimes", rideSchema, (req, res) => {
     }
 );
 
+
+/**
+ * Handles finding the average park wait times
+ */
 app.intent('ParkWaitTimes', parkSchema, (req, res) => {
     let parkName = req.slot('parkName');
     const rePrompt = "You can say Universal or Islands of Adventure to get the average park wait time.";
@@ -148,6 +207,9 @@ app.intent('ParkWaitTimes', parkSchema, (req, res) => {
 
                 res.say(`I couldn\'t find the park with the name ${parkName} try asking for a unique word or phrase in the park name`).shouldEndSession(false)
             } else {
+
+                console.log('Park Name Success!');
+
                 res.say("The average wait time for " + data.body.park + " theme park is currently " + data.body.wait + " minutes").shouldEndSession(false);
             }
         });
@@ -164,7 +226,7 @@ app.error = function(exception, request, response) {
 app.launch(function(req, res) {
 
     //Alexa's first prompt
-    let prompt = 'Welcome to Ride Times, you can ask me things like what are the wait times at Universal, or Whats the line like for The Incredible Hulk....How can I help you today';
+    let prompt = 'Welcome to Ride Times, you can ask me things like what are the wait times at Islands of Adventure, or Whats the line like for The Incredible Hulk....How can I help you today';
 
     res.say(prompt).reprompt(prompt).shouldEndSession(false);
 
