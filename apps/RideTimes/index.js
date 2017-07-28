@@ -39,7 +39,7 @@ let parkSchema = {
 
 let rideTypeSchema = {
     "slots": {
-        "rideName": "List_of_Parks"
+        "rideName": "List_of_Rides"
     },
 
     "utterances": [
@@ -134,7 +134,7 @@ app.intent("RideType", rideTypeSchema, (req, res) => {
 
                res.say(`I couldn\'t find a ride with the name ${rideName} try asking for a unique word or phrase in the rides name`).shouldEndSession(false);
            }  else {
-               res.say(`${rideName}'s is a ${data.body[0].ride_type} ride`).shouldEndSession(false);
+               res.say(`${data.body[0].name} is a ${data.body[0].ride_type} ride`).shouldEndSession(false);
            }
         });
     }
