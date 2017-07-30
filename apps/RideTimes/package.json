@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha --require ./testHelper.js '+(test)/**/*.test.js'",
-    "start": "node entry.js",
-    "server": "node server.js"
+    "start": "node entry.js"
   },
   "keywords": [
     "alexa",
