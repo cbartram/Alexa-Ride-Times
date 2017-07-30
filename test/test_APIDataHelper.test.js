@@ -2,7 +2,7 @@
 let chai = require('chai');
 let expect = chai.expect;
 chai.config.includeStack = true;
-let APIDataHelper = require('../src/APIDataHelper');
+let APIDataHelper = require('../apps/RideTimes/APIDataHelper');
 
 
 describe('APIDataHelper', function() {
@@ -50,23 +50,5 @@ describe('APIDataHelper', function() {
         });
 
     });
-
-
-    describe('#mapNameToId', function() {
-
-        context('with a valid ride name', function() {
-
-            it('returns ride id', function() {
-
-                rideName = "Spider";
-
-                APIDataHelper.getIDforName(rideName, (id) => {
-                   expect(id).to.eq(10831);
-                });
-
-            });
-
-        });
-
-    });
+    
 });
